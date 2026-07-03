@@ -1,0 +1,39 @@
+{
+  "name": "envscan",
+  "version": "0.1.0",
+  "description": "Scan your codebase for environment variables and catch missing or unused ones before they break production.",
+  "type": "module",
+  "bin": {
+    "envscan": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/cli.ts --format esm --clean",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment-variables",
+    "cli",
+    "linter",
+    "devtool"
+  ],
+  "author": "Pixel20coder",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
