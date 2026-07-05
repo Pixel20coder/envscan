@@ -23,6 +23,7 @@ npx envscan
 envscan                       # scan ./ against .env.example
 envscan ./src                 # scan a specific directory
 envscan --env .env.sample     # use a different reference file
+envscan --fix                 # append missing vars to the env file as placeholders
 envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
 ```
@@ -60,6 +61,18 @@ Scanned 42 files · checked against .env.example
 | report  | Print human output, or JSON with `--json`                           |
 
 Runtime-injected vars (`NODE_ENV`, `PORT`, `CI`, …) are ignored by default.
+
+### Auto-fixing
+
+Pass `--fix` and envscan appends any missing variables to your env file as
+empty placeholders (creating the file if needed), so you can fill in the values
+instead of hunting them down:
+
+```text
+$ envscan --fix
+✚ Added 2 placeholder(s) to .env.example:
+  REDIS_URL, STRIPE_SECRET_KEY
+```
 
 ## Development
 
