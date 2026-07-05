@@ -62,6 +62,21 @@ Scanned 42 files · checked against .env.example
 
 Runtime-injected vars (`NODE_ENV`, `PORT`, `CI`, …) are ignored by default.
 
+### Configuration
+
+Drop an `envscan.json` in the scanned directory to set defaults and skip
+variables you don't want reported (exact names or `*` glob patterns):
+
+```json
+{
+  "env": ".env.example",
+  "strict": false,
+  "ignore": ["AWS_*", "SENTRY_DSN", "NEXT_RUNTIME"]
+}
+```
+
+Command-line flags always override the config file.
+
 ### Auto-fixing
 
 Pass `--fix` and envscan appends any missing variables to your env file as
