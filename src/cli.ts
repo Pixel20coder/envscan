@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { join, resolve } from "node:path";
 import { collectFiles, scanUsages } from "./scanner.js";
-import { parseEnvKeys } from "./envfile.js";
+import { parseEnvKeys, appendEnvKeys } from "./envfile.js";
 import { buildReport } from "./report.js";
 
 const c = {
@@ -17,6 +17,7 @@ interface Options {
   envFile: string;
   json: boolean;
   strict: boolean;
+  fix: boolean;
 }
 
 function parseArgs(argv: string[]): Options {
@@ -25,12 +26,14 @@ function parseArgs(argv: string[]): Options {
     envFile: ".env.example",
     json: false,
     strict: false,
+    fix: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--env" || arg === "-e") opts.envFile = argv[++i] ?? opts.envFile;
     else if (arg === "--json") opts.json = true;
     else if (arg === "--strict") opts.strict = true;
+    else if (arg === "--fix") opts.fix = true;
     else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -47,6 +50,7 @@ ${c.bold("Usage:")}
 
 ${c.bold("Options:")}
   -e, --env <file>   env file to check against (default: .env.example)
+      --fix          append any missing vars to the env file as placeholders
       --strict       also fail when declared vars are unused
       --json         output machine-readable JSON
   -h, --help         show this help
@@ -61,8 +65,16 @@ function main(): void {
 
   const files = collectFiles(root);
   const usages = scanUsages(files);
-  const declared = parseEnvKeys(join(root, opts.envFile));
+  const envPath = join(root, opts.envFile);
+  const declared = parseEnvKeys(envPath);
   const report = buildReport(usages, declared);
+
+  if (opts.fix && report.missing.length > 0) {
+    const added = appendEnvKeys(envPath, report.missing.map((m) => m.key));
+    console.log(c.green(`✚ Added ${added.length} placeholder(s) to ${opts.envFile}:`));
+    console.log(`  ${added.join(", ")}\n`);
+    process.exit(0);
+  }
 
   if (opts.json) {
     console.log(JSON.stringify(report, null, 2));
