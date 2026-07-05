@@ -15,6 +15,7 @@ const BUILTINS = new Set(["NODE_ENV", "PORT", "PWD", "HOME", "PATH", "CI"]);
 export function buildReport(
   usages: EnvUsage[],
   declared: Set<string>,
+  isIgnored: (key: string) => boolean = () => false,
 ): Report {
   const byKey = new Map<string, EnvUsage[]>();
   for (const u of usages) {
@@ -25,14 +26,14 @@ export function buildReport(
 
   const missing: Report["missing"] = [];
   for (const [key, keyUsages] of byKey) {
-    if (!declared.has(key) && !BUILTINS.has(key)) {
+    if (!declared.has(key) && !BUILTINS.has(key) && !isIgnored(key)) {
       missing.push({ key, usages: keyUsages });
     }
   }
   missing.sort((a, b) => a.key.localeCompare(b.key));
 
   const unused = [...declared]
-    .filter((key) => !byKey.has(key))
+    .filter((key) => !byKey.has(key) && !isIgnored(key))
     .sort((a, b) => a.localeCompare(b));
 
   return {

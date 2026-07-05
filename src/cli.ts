@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { collectFiles, scanUsages } from "./scanner.js";
 import { parseEnvKeys, appendEnvKeys } from "./envfile.js";
 import { buildReport } from "./report.js";
+import { loadConfig, makeMatcher } from "./config.js";
 
 const c = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -12,6 +13,16 @@ const c = {
   bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
 };
 
+/** Raw command-line flags. `envFile`/`strict` stay undefined unless passed, so
+ *  config-file values can fill the gap before defaults are applied. */
+interface CliArgs {
+  dir: string;
+  envFile?: string;
+  json: boolean;
+  strict?: boolean;
+  fix: boolean;
+}
+
 interface Options {
   dir: string;
   envFile: string;
@@ -20,26 +31,20 @@ interface Options {
   fix: boolean;
 }
 
-function parseArgs(argv: string[]): Options {
-  const opts: Options = {
-    dir: ".",
-    envFile: ".env.example",
-    json: false,
-    strict: false,
-    fix: false,
-  };
+function parseArgs(argv: string[]): CliArgs {
+  const args: CliArgs = { dir: ".", json: false, fix: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === "--env" || arg === "-e") opts.envFile = argv[++i] ?? opts.envFile;
-    else if (arg === "--json") opts.json = true;
-    else if (arg === "--strict") opts.strict = true;
-    else if (arg === "--fix") opts.fix = true;
+    if (arg === "--env" || arg === "-e") args.envFile = argv[++i] ?? args.envFile;
+    else if (arg === "--json") args.json = true;
+    else if (arg === "--strict") args.strict = true;
+    else if (arg === "--fix") args.fix = true;
     else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
-    } else if (!arg?.startsWith("-")) opts.dir = arg ?? opts.dir;
+    } else if (!arg?.startsWith("-")) args.dir = arg ?? args.dir;
   }
-  return opts;
+  return args;
 }
 
 function printHelp(): void {
@@ -55,19 +60,39 @@ ${c.bold("Options:")}
       --json         output machine-readable JSON
   -h, --help         show this help
 
+${c.bold("Config:")}
+  envscan.json in the target dir may set "env", "strict", and an
+  "ignore" list of var names or * patterns (e.g. "AWS_*"). Flags win.
+
 ${c.bold("Exit codes:")}
-  0  all good   1  missing (or unused in --strict) vars found`);
+  0  all good   1  missing/unused vars   2  bad config`);
 }
 
 function main(): void {
-  const opts = parseArgs(process.argv.slice(2));
-  const root = resolve(opts.dir);
+  const args = parseArgs(process.argv.slice(2));
+  const root = resolve(args.dir);
+
+  // CLI flags take precedence over envscan.json, which takes precedence over defaults.
+  let config;
+  try {
+    config = loadConfig(root);
+  } catch (err) {
+    console.error(c.red(`✖ ${(err as Error).message}`));
+    process.exit(2);
+  }
+  const opts: Options = {
+    dir: args.dir,
+    envFile: args.envFile ?? config.env ?? ".env.example",
+    json: args.json,
+    strict: args.strict ?? config.strict ?? false,
+    fix: args.fix,
+  };
 
   const files = collectFiles(root);
   const usages = scanUsages(files);
   const envPath = join(root, opts.envFile);
   const declared = parseEnvKeys(envPath);
-  const report = buildReport(usages, declared);
+  const report = buildReport(usages, declared, makeMatcher(config.ignore));
 
   if (opts.fix && report.missing.length > 0) {
     const added = appendEnvKeys(envPath, report.missing.map((m) => m.key));
