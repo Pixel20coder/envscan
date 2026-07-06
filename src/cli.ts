@@ -4,6 +4,7 @@ import { collectFiles, scanUsages } from "./scanner.js";
 import { parseEnvKeys, appendEnvKeys } from "./envfile.js";
 import { buildReport } from "./report.js";
 import { loadConfig, makeMatcher } from "./config.js";
+import { detectFramework, presetPatterns } from "./presets.js";
 
 const c = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -21,6 +22,7 @@ interface CliArgs {
   json: boolean;
   strict?: boolean;
   fix: boolean;
+  framework?: string;
 }
 
 interface Options {
@@ -36,6 +38,7 @@ function parseArgs(argv: string[]): CliArgs {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--env" || arg === "-e") args.envFile = argv[++i] ?? args.envFile;
+    else if (arg === "--framework" || arg === "-f") args.framework = argv[++i] ?? args.framework;
     else if (arg === "--json") args.json = true;
     else if (arg === "--strict") args.strict = true;
     else if (arg === "--fix") args.fix = true;
@@ -54,15 +57,17 @@ ${c.bold("Usage:")}
   envscan [dir] [options]
 
 ${c.bold("Options:")}
-  -e, --env <file>   env file to check against (default: .env.example)
-      --fix          append any missing vars to the env file as placeholders
-      --strict       also fail when declared vars are unused
-      --json         output machine-readable JSON
-  -h, --help         show this help
+  -e, --env <file>       env file to check against (default: .env.example)
+  -f, --framework <name> preset for injected vars: next, vite, cra, expo, astro
+      --fix              append any missing vars to the env file as placeholders
+      --strict           also fail when declared vars are unused
+      --json             output machine-readable JSON
+  -h, --help             show this help
 
 ${c.bold("Config:")}
-  envscan.json in the target dir may set "env", "strict", and an
-  "ignore" list of var names or * patterns (e.g. "AWS_*"). Flags win.
+  envscan.json in the target dir may set "env", "strict", "framework",
+  and an "ignore" list of var names or * patterns (e.g. "AWS_*"). Flags win.
+  The framework is auto-detected from package.json when not set.
 
 ${c.bold("Exit codes:")}
   0  all good   1  missing/unused vars   2  bad config`);
@@ -88,11 +93,15 @@ function main(): void {
     fix: args.fix,
   };
 
+  // Framework: explicit flag > config > auto-detected from package.json.
+  const framework = args.framework ?? config.framework ?? detectFramework(root);
+  const ignorePatterns = [...config.ignore, ...presetPatterns(framework)];
+
   const files = collectFiles(root);
   const usages = scanUsages(files);
   const envPath = join(root, opts.envFile);
   const declared = parseEnvKeys(envPath);
-  const report = buildReport(usages, declared, makeMatcher(config.ignore));
+  const report = buildReport(usages, declared, makeMatcher(ignorePatterns));
 
   if (opts.fix && report.missing.length > 0) {
     const added = appendEnvKeys(envPath, report.missing.map((m) => m.key));

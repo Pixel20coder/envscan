@@ -8,6 +8,8 @@ export interface Config {
   env?: string;
   /** Also fail when declared vars are unused. */
   strict?: boolean;
+  /** Framework preset name (e.g. "next", "vite") for injected vars. */
+  framework?: string;
   /** Var names or `*` glob patterns to exclude from the report. */
   ignore: string[];
 }
@@ -34,6 +36,7 @@ export function loadConfig(root: string): Config {
   const obj = parsed as Record<string, unknown>;
   if (typeof obj.env === "string") config.env = obj.env;
   if (typeof obj.strict === "boolean") config.strict = obj.strict;
+  if (typeof obj.framework === "string") config.framework = obj.framework;
   if (Array.isArray(obj.ignore)) {
     config.ignore = obj.ignore.filter((v): v is string => typeof v === "string");
   }
