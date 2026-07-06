@@ -62,6 +62,18 @@ Scanned 42 files · checked against .env.example
 
 Runtime-injected vars (`NODE_ENV`, `PORT`, `CI`, …) are ignored by default.
 
+### Framework presets
+
+Frameworks inject their own public variables (`NEXT_PUBLIC_*`, `VITE_*`, …).
+envscan auto-detects the framework from your `package.json` and treats those as
+valid, so they never show up as false "missing" reports. Override with a flag:
+
+```bash
+envscan --framework vite
+```
+
+Supported presets: `next`, `vite`, `cra`, `expo`, `astro`.
+
 ### Configuration
 
 Drop an `envscan.json` in the scanned directory to set defaults and skip
@@ -71,7 +83,8 @@ variables you don't want reported (exact names or `*` glob patterns):
 {
   "env": ".env.example",
   "strict": false,
-  "ignore": ["AWS_*", "SENTRY_DSN", "NEXT_RUNTIME"]
+  "framework": "next",
+  "ignore": ["AWS_*", "SENTRY_DSN"]
 }
 ```
 
