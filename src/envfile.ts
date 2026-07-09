@@ -1,23 +1,45 @@
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 
 /**
- * Parse the KEY names declared in a dotenv-style file.
- * We only care about which keys are defined, not their values.
+ * Read the declared KEY names from a dotenv-style file, in file order and
+ * including any repeats. Blank lines and comments are skipped. Returns [] when
+ * the file does not exist.
  */
-export function parseEnvKeys(filePath: string): Set<string> {
-  const keys = new Set<string>();
-  if (!existsSync(filePath)) return keys;
+function readDeclaredKeys(filePath: string): string[] {
+  if (!existsSync(filePath)) return [];
 
-  const content = readFileSync(filePath, "utf8");
-  for (const rawLine of content.split(/\r?\n/)) {
+  const keys: string[] = [];
+  for (const rawLine of readFileSync(filePath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
     if (line === "" || line.startsWith("#")) continue;
 
     // Support optional `export ` prefix, then KEY=...
     const match = line.match(/^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/);
-    if (match?.[1]) keys.add(match[1]);
+    if (match?.[1]) keys.push(match[1]);
   }
   return keys;
+}
+
+/**
+ * Parse the distinct KEY names declared in a dotenv-style file.
+ * We only care about which keys are defined, not their values.
+ */
+export function parseEnvKeys(filePath: string): Set<string> {
+  return new Set(readDeclaredKeys(filePath));
+}
+
+/**
+ * Find keys that are declared more than once in the env file. Later
+ * declarations silently override earlier ones, so this is usually a mistake.
+ */
+export function findDuplicateKeys(filePath: string): string[] {
+  const seen = new Set<string>();
+  const dupes = new Set<string>();
+  for (const key of readDeclaredKeys(filePath)) {
+    if (seen.has(key)) dupes.add(key);
+    else seen.add(key);
+  }
+  return [...dupes].sort((a, b) => a.localeCompare(b));
 }
 
 /**
