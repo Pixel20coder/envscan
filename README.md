@@ -38,6 +38,9 @@ Scanned 42 files · checked against .env.example
   • STRIPE_SECRET_KEY  (src/billing.ts:12)
   • REDIS_URL          (src/cache.ts:4)
 
+✖ 1 duplicate declaration(s) in .env.example:
+  API_KEY
+
 ⚠ 1 declared but unused:
   LEGACY_TOKEN
 ```
@@ -57,7 +60,7 @@ Scanned 42 files · checked against .env.example
 | ------- | ------------------------------------------------------------------- |
 | collect | Recursively gather code files, skipping `node_modules`, `dist`, etc. |
 | scan    | Regex-match `process.env.*` and `import.meta.env.*` usages          |
-| compare | Diff usages against keys declared in your env file                  |
+| compare | Diff usages against keys declared in your env file, flag duplicates |
 | report  | Print human output, or JSON with `--json`                           |
 
 Runtime-injected vars (`NODE_ENV`, `PORT`, `CI`, …) are ignored by default.
