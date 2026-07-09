@@ -5,6 +5,8 @@ export interface Report {
   missing: { key: string; usages: EnvUsage[] }[];
   /** Vars declared in the env file but never used in code. */
   unused: string[];
+  /** Vars declared more than once in the env file. */
+  duplicates: string[];
   /** Every distinct var referenced in code. */
   used: string[];
 }
@@ -16,6 +18,7 @@ export function buildReport(
   usages: EnvUsage[],
   declared: Set<string>,
   isIgnored: (key: string) => boolean = () => false,
+  duplicates: string[] = [],
 ): Report {
   const byKey = new Map<string, EnvUsage[]>();
   for (const u of usages) {
@@ -39,6 +42,7 @@ export function buildReport(
   return {
     missing,
     unused,
+    duplicates: duplicates.filter((key) => !isIgnored(key)),
     used: [...byKey.keys()].sort((a, b) => a.localeCompare(b)),
   };
 }

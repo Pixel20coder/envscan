@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { join, resolve } from "node:path";
 import { collectFiles, scanUsages } from "./scanner.js";
-import { parseEnvKeys, appendEnvKeys } from "./envfile.js";
+import { parseEnvKeys, appendEnvKeys, findDuplicateKeys } from "./envfile.js";
 import { buildReport } from "./report.js";
 import { loadConfig, makeMatcher } from "./config.js";
 import { detectFramework, presetPatterns } from "./presets.js";
@@ -70,7 +70,7 @@ ${c.bold("Config:")}
   The framework is auto-detected from package.json when not set.
 
 ${c.bold("Exit codes:")}
-  0  all good   1  missing/unused vars   2  bad config`);
+  0  all good   1  missing/duplicate/unused vars   2  bad config`);
 }
 
 function main(): void {
@@ -101,7 +101,8 @@ function main(): void {
   const usages = scanUsages(files);
   const envPath = join(root, opts.envFile);
   const declared = parseEnvKeys(envPath);
-  const report = buildReport(usages, declared, makeMatcher(ignorePatterns));
+  const duplicates = findDuplicateKeys(envPath);
+  const report = buildReport(usages, declared, makeMatcher(ignorePatterns), duplicates);
 
   if (opts.fix && report.missing.length > 0) {
     const added = appendEnvKeys(envPath, report.missing.map((m) => m.key));
@@ -116,7 +117,10 @@ function main(): void {
     printHuman(report, opts, files.length);
   }
 
-  const failed = report.missing.length > 0 || (opts.strict && report.unused.length > 0);
+  const failed =
+    report.missing.length > 0 ||
+    report.duplicates.length > 0 ||
+    (opts.strict && report.unused.length > 0);
   process.exit(failed ? 1 : 0);
 }
 
@@ -127,7 +131,11 @@ function printHuman(
 ): void {
   console.log(c.dim(`Scanned ${fileCount} files · checked against ${opts.envFile}\n`));
 
-  if (report.missing.length === 0 && report.unused.length === 0) {
+  if (
+    report.missing.length === 0 &&
+    report.unused.length === 0 &&
+    report.duplicates.length === 0
+  ) {
     console.log(c.green("✔ All environment variables are declared and used."));
     return;
   }
@@ -139,6 +147,11 @@ function printHuman(
       console.log(`  ${c.red("•")} ${c.bold(key)} ${c.dim(`(${where?.file}:${where?.line})`)}`);
     }
     console.log();
+  }
+
+  if (report.duplicates.length > 0) {
+    console.log(c.red(`✖ ${report.duplicates.length} duplicate declaration(s) in ${opts.envFile}:`));
+    console.log(`  ${report.duplicates.join(", ")}\n`);
   }
 
   if (report.unused.length > 0) {
