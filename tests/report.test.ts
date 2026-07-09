@@ -24,4 +24,10 @@ describe("buildReport", () => {
     const report = buildReport([usage("B"), usage("A"), usage("A")], new Set());
     expect(report.used).toEqual(["A", "B"]);
   });
+
+  it("carries duplicates through but drops ignored ones", () => {
+    const ignore = (k: string) => k === "DEBUG";
+    const report = buildReport([], new Set(), ignore, ["API_KEY", "DEBUG"]);
+    expect(report.duplicates).toEqual(["API_KEY"]);
+  });
 });

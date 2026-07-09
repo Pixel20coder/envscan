@@ -3,7 +3,7 @@ import { writeFileSync, rmSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { readFileSync } from "node:fs";
-import { parseEnvKeys, appendEnvKeys } from "../src/envfile.js";
+import { parseEnvKeys, appendEnvKeys, findDuplicateKeys } from "../src/envfile.js";
 
 let dir: string;
 
@@ -48,5 +48,19 @@ describe("appendEnvKeys", () => {
     const file = join(dir, "full.env");
     writeFileSync(file, "A=1\n");
     expect(appendEnvKeys(file, ["A"])).toEqual([]);
+  });
+});
+
+describe("findDuplicateKeys", () => {
+  it("reports keys declared more than once, sorted and deduped", () => {
+    const file = join(dir, "dupes.env");
+    writeFileSync(file, ["B=1", "A=1", "A=2", "B=3", "C=1"].join("\n"));
+    expect(findDuplicateKeys(file)).toEqual(["A", "B"]);
+  });
+
+  it("returns nothing when every key is unique", () => {
+    const file = join(dir, "unique.env");
+    writeFileSync(file, "A=1\nB=2\n");
+    expect(findDuplicateKeys(file)).toEqual([]);
   });
 });
