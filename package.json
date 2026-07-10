@@ -14,7 +14,8 @@
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "keywords": [
     "env",
@@ -26,6 +27,17 @@
   ],
   "author": "Pixel20coder",
   "license": "MIT",
+  "homepage": "https://github.com/Pixel20coder/envscan#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pixel20coder/envscan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pixel20coder/envscan/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18"
   },
