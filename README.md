@@ -1,5 +1,9 @@
 # envscan
 
+[![npm version](https://img.shields.io/npm/v/envscan.svg)](https://www.npmjs.com/package/envscan)
+[![license](https://img.shields.io/npm/l/envscan.svg)](./LICENSE)
+[![node](https://img.shields.io/node/v/envscan.svg)](https://nodejs.org)
+
 > Catch missing or unused environment variables before they break production.
 
 `envscan` walks your codebase, finds every `process.env.X` / `import.meta.env.X`
