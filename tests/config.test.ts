@@ -28,6 +28,13 @@ describe("loadConfig", () => {
     });
   });
 
+  it("accepts a list of env files", () => {
+    const d = mkdtempSync(join(tmpdir(), "envscan-multi-"));
+    writeFileSync(join(d, "envscan.json"), JSON.stringify({ env: [".env.example", ".env.local"] }));
+    expect(loadConfig(d).env).toEqual([".env.example", ".env.local"]);
+    rmSync(d, { recursive: true, force: true });
+  });
+
   it("throws a readable error on invalid JSON", () => {
     const bad = mkdtempSync(join(tmpdir(), "envscan-bad-"));
     writeFileSync(join(bad, "envscan.json"), "{ not json");
