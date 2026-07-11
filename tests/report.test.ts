@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { buildReport } from "../src/report.js";
 import type { EnvUsage } from "../src/scanner.js";
 
-const usage = (key: string): EnvUsage => ({ key, file: "app.ts", line: 1 });
+const usage = (key: string, optional = false): EnvUsage => ({
+  key,
+  file: "app.ts",
+  line: 1,
+  optional,
+});
 
 describe("buildReport", () => {
   it("flags vars used in code but not declared", () => {
@@ -29,5 +34,17 @@ describe("buildReport", () => {
     const ignore = (k: string) => k === "DEBUG";
     const report = buildReport([], new Set(), ignore, ["API_KEY", "DEBUG"]);
     expect(report.duplicates).toEqual(["API_KEY"]);
+  });
+
+  it("treats vars with a fallback as optional, not missing", () => {
+    const report = buildReport([usage("LOG_LEVEL", true)], new Set());
+    expect(report.missing).toHaveLength(0);
+    expect(report.optional).toEqual(["LOG_LEVEL"]);
+  });
+
+  it("still flags a var as missing if any usage lacks a fallback", () => {
+    const report = buildReport([usage("API_KEY", true), usage("API_KEY", false)], new Set());
+    expect(report.missing.map((m) => m.key)).toEqual(["API_KEY"]);
+    expect(report.optional).toHaveLength(0);
   });
 });

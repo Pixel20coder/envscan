@@ -30,4 +30,19 @@ describe("scanner", () => {
     const keys = scanUsages(collectFiles(dir)).map((u) => u.key).sort();
     expect(keys).toEqual(["API_KEY", "DB_URL", "MODE"]);
   });
+
+  it("marks references with a || or ?? fallback as optional", () => {
+    const d = mkdtempSync(join(tmpdir(), "envscan-opt-"));
+    writeFileSync(
+      join(d, "app.ts"),
+      [
+        "const a = process.env.REQUIRED;",
+        "const b = process.env.WITH_OR || 'x';",
+        "const c = process.env.WITH_NULLISH ?? 'y';",
+      ].join("\n"),
+    );
+    const byKey = Object.fromEntries(scanUsages(collectFiles(d)).map((u) => [u.key, u.optional]));
+    expect(byKey).toEqual({ REQUIRED: false, WITH_OR: true, WITH_NULLISH: true });
+    rmSync(d, { recursive: true, force: true });
+  });
 });
