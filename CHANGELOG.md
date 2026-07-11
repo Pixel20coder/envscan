@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.6.0
+
+- Check against multiple env files: repeat `--env` or pass a list in
+  `envscan.json`. A variable declared in any file counts as declared.
+
 ## 0.5.0
 
 - Detect duplicate variable declarations in the env file and fail on them.

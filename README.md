@@ -27,6 +27,7 @@ npx envscan
 envscan                       # scan ./ against .env.example
 envscan ./src                 # scan a specific directory
 envscan --env .env.sample     # use a different reference file
+envscan -e .env.example -e .env.local  # check against several files at once
 envscan --fix                 # append missing vars to the env file as placeholders
 envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
@@ -88,14 +89,15 @@ variables you don't want reported (exact names or `*` glob patterns):
 
 ```json
 {
-  "env": ".env.example",
+  "env": [".env.example", ".env.local"],
   "strict": false,
   "framework": "next",
   "ignore": ["AWS_*", "SENTRY_DSN"]
 }
 ```
 
-Command-line flags always override the config file.
+`env` accepts a single file or a list — a variable declared in *any* of them
+counts as declared. Command-line flags always override the config file.
 
 ### Auto-fixing
 
