@@ -148,13 +148,13 @@ function printHuman(
 ): void {
   console.log(c.dim(`Scanned ${fileCount} files · checked against ${opts.envFiles.join(", ")}\n`));
 
-  if (
+  const clean =
     report.missing.length === 0 &&
     report.unused.length === 0 &&
-    report.duplicates.length === 0
-  ) {
-    console.log(c.green("✔ All environment variables are declared and used."));
-    return;
+    report.duplicates.length === 0;
+
+  if (clean) {
+    console.log(c.green("✔ All required environment variables are declared."));
   }
 
   if (report.missing.length > 0) {
@@ -175,6 +175,10 @@ function printHuman(
     const label = opts.strict ? c.red : c.yellow;
     console.log(label(`⚠ ${report.unused.length} declared but unused:`));
     console.log(`  ${report.unused.join(", ")}\n`);
+  }
+
+  if (report.optional.length > 0) {
+    console.log(c.dim(`ℹ ${report.optional.length} optional (used with a fallback): ${report.optional.join(", ")}`));
   }
 }
 

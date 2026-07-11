@@ -1,8 +1,10 @@
 import type { EnvUsage } from "./scanner.js";
 
 export interface Report {
-  /** Vars used in code but not declared in the env file. */
+  /** Required vars used in code but not declared in the env file. */
   missing: { key: string; usages: EnvUsage[] }[];
+  /** Undeclared vars whose every usage has a fallback — safe but worth noting. */
+  optional: string[];
   /** Vars declared in the env file but never used in code. */
   unused: string[];
   /** Vars declared more than once in the env file. */
@@ -28,12 +30,15 @@ export function buildReport(
   }
 
   const missing: Report["missing"] = [];
+  const optional: string[] = [];
   for (const [key, keyUsages] of byKey) {
-    if (!declared.has(key) && !BUILTINS.has(key) && !isIgnored(key)) {
-      missing.push({ key, usages: keyUsages });
-    }
+    if (declared.has(key) || BUILTINS.has(key) || isIgnored(key)) continue;
+    // A var is only "missing" if at least one usage relies on it having a value.
+    if (keyUsages.some((u) => !u.optional)) missing.push({ key, usages: keyUsages });
+    else optional.push(key);
   }
   missing.sort((a, b) => a.key.localeCompare(b.key));
+  optional.sort((a, b) => a.localeCompare(b));
 
   const unused = [...declared]
     .filter((key) => !byKey.has(key) && !isIgnored(key))
@@ -41,6 +46,7 @@ export function buildReport(
 
   return {
     missing,
+    optional,
     unused,
     duplicates: duplicates.filter((key) => !isIgnored(key)),
     used: [...byKey.keys()].sort((a, b) => a.localeCompare(b)),
