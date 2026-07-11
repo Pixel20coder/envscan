@@ -4,8 +4,8 @@ import { join } from "node:path";
 export const CONFIG_FILE = "envscan.json";
 
 export interface Config {
-  /** Env file to check against (e.g. ".env.example"). */
-  env?: string;
+  /** Env file(s) to check against (e.g. ".env.example" or a list). */
+  env?: string | string[];
   /** Also fail when declared vars are unused. */
   strict?: boolean;
   /** Framework preset name (e.g. "next", "vite") for injected vars. */
@@ -35,6 +35,9 @@ export function loadConfig(root: string): Config {
 
   const obj = parsed as Record<string, unknown>;
   if (typeof obj.env === "string") config.env = obj.env;
+  else if (Array.isArray(obj.env)) {
+    config.env = obj.env.filter((v): v is string => typeof v === "string");
+  }
   if (typeof obj.strict === "boolean") config.strict = obj.strict;
   if (typeof obj.framework === "string") config.framework = obj.framework;
   if (Array.isArray(obj.ignore)) {
