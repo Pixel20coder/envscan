@@ -12,10 +12,15 @@ const IGNORED_DIRS = new Set([
 // Matches process.env.FOO, process.env["FOO"], import.meta.env.FOO
 const ENV_USAGE = /(?:process\.env|import\.meta\.env)(?:\.([A-Za-z_][A-Za-z0-9_]*)|\[\s*['"`]([A-Za-z_][A-Za-z0-9_]*)['"`]\s*\])/g;
 
+// A fallback right after the reference (`|| "x"`, `?? "x"`) makes the var optional.
+const FALLBACK = /^\s*(?:\|\||\?\?)/;
+
 export interface EnvUsage {
   key: string;
   file: string;
   line: number;
+  /** True when the reference has a `||`/`??` fallback, so absence is handled. */
+  optional: boolean;
 }
 
 /** Recursively collect scannable code files under `dir`. */
@@ -45,7 +50,9 @@ export function scanUsages(files: string[]): EnvUsage[] {
       ENV_USAGE.lastIndex = 0;
       while ((m = ENV_USAGE.exec(text)) !== null) {
         const key = m[1] ?? m[2];
-        if (key) usages.push({ key, file, line: i + 1 });
+        if (!key) continue;
+        const rest = text.slice(m.index + m[0].length);
+        usages.push({ key, file, line: i + 1, optional: FALLBACK.test(rest) });
       }
     });
   }
