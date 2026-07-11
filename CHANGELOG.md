@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.7.0
+
+- Detect optional variables: references with a `||`/`??` fallback are no longer
+  reported as missing, just listed for awareness.
+
 ## 0.6.0
 
 - Check against multiple env files: repeat `--env` or pass a list in

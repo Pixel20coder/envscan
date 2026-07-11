@@ -70,6 +70,21 @@ Scanned 42 files · checked against .env.example
 
 Runtime-injected vars (`NODE_ENV`, `PORT`, `CI`, …) are ignored by default.
 
+### Optional variables
+
+If every reference to a variable supplies a fallback, envscan treats it as
+optional — it won't fail the check when the variable is missing, but still
+lists it so you know it exists:
+
+```ts
+const level = process.env.LOG_LEVEL ?? "info";   // optional, not required
+const key = process.env.API_KEY;                 // required
+```
+
+```text
+ℹ 1 optional (used with a fallback): LOG_LEVEL
+```
+
 ### Framework presets
 
 Frameworks inject their own public variables (`NEXT_PUBLIC_*`, `VITE_*`, …).
