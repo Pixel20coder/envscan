@@ -31,6 +31,21 @@ describe("scanner", () => {
     expect(keys).toEqual(["API_KEY", "DB_URL", "MODE"]);
   });
 
+  it("ignores references inside comments", () => {
+    const d = mkdtempSync(join(tmpdir(), "envscan-cmt-"));
+    writeFileSync(
+      join(d, "app.ts"),
+      [
+        "const a = process.env.REAL;",
+        "// const b = process.env.COMMENTED;",
+        "/* process.env.BLOCKED */",
+      ].join("\n"),
+    );
+    const keys = scanUsages(collectFiles(d)).map((u) => u.key).sort();
+    expect(keys).toEqual(["REAL"]);
+    rmSync(d, { recursive: true, force: true });
+  });
+
   it("marks references with a || or ?? fallback as optional", () => {
     const d = mkdtempSync(join(tmpdir(), "envscan-opt-"));
     writeFileSync(
