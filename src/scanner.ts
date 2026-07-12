@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
+import { stripComments } from "./comments.js";
 
 const CODE_EXTENSIONS = new Set([
   ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".vue", ".svelte",
@@ -43,7 +44,8 @@ export function collectFiles(dir: string): string[] {
 export function scanUsages(files: string[]): EnvUsage[] {
   const usages: EnvUsage[] = [];
   for (const file of files) {
-    const content = readFileSync(file, "utf8");
+    // Strip comments first so commented-out references aren't counted.
+    const content = stripComments(readFileSync(file, "utf8"));
     const lines = content.split(/\r?\n/);
     lines.forEach((text, i) => {
       let m: RegExpExecArray | null;
