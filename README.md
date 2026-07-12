@@ -12,6 +12,7 @@ variables your code needs but you forgot to document, and which ones you
 document but no longer use.
 
 Zero runtime dependencies. Works with JS, TS, JSX, TSX, Vue, and Svelte.
+Commented-out references are ignored, so old code doesn't cause false reports.
 
 ## Install
 
@@ -64,7 +65,7 @@ Scanned 42 files · checked against .env.example
 | Step    | What happens                                                        |
 | ------- | ------------------------------------------------------------------- |
 | collect | Recursively gather code files, skipping `node_modules`, `dist`, etc. |
-| scan    | Regex-match `process.env.*` and `import.meta.env.*` usages          |
+| scan    | Strip comments, then match `process.env.*` / `import.meta.env.*`    |
 | compare | Diff usages against keys declared in your env file, flag duplicates |
 | report  | Print human output, or JSON with `--json`                           |
 

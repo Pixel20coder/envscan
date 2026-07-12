@@ -1,6 +1,6 @@
 {
   "name": "envscan",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Scan your codebase for environment variables and catch missing or unused ones before they break production.",
   "type": "module",
   "bin": {
