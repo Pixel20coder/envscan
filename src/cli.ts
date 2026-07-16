@@ -5,6 +5,7 @@ import { parseEnvKeys, appendEnvKeys, findDuplicateKeys } from "./envfile.js";
 import { buildReport } from "./report.js";
 import { loadConfig, makeMatcher } from "./config.js";
 import { detectFramework, presetPatterns } from "./presets.js";
+import { githubAnnotations } from "./github.js";
 
 const c = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -23,6 +24,7 @@ interface CliArgs {
   strict?: boolean;
   fix: boolean;
   framework?: string;
+  github?: boolean;
 }
 
 interface Options {
@@ -42,6 +44,7 @@ function parseArgs(argv: string[]): CliArgs {
       if (next) args.envFiles.push(next);
     } else if (arg === "--framework" || arg === "-f") args.framework = argv[++i] ?? args.framework;
     else if (arg === "--json") args.json = true;
+    else if (arg === "--github") args.github = true;
     else if (arg === "--strict") args.strict = true;
     else if (arg === "--fix") args.fix = true;
     else if (arg === "--help" || arg === "-h") {
@@ -64,6 +67,7 @@ ${c.bold("Options:")}
       --fix              append any missing vars to the env file as placeholders
       --strict           also fail when declared vars are unused
       --json             output machine-readable JSON
+      --github           emit GitHub Actions annotations (auto in CI)
   -h, --help             show this help
 
 ${c.bold("Config:")}
@@ -128,8 +132,13 @@ function main(): void {
     process.exit(0);
   }
 
+  const github = args.github ?? process.env.GITHUB_ACTIONS === "true";
   if (opts.json) {
     console.log(JSON.stringify(report, null, 2));
+  } else if (github) {
+    for (const line of githubAnnotations(report, opts.envFiles.join(", "), opts.strict)) {
+      console.log(line);
+    }
   } else {
     printHuman(report, opts, files.length);
   }
