@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.9.0
+
+- GitHub Actions annotations: with `--github` (auto-enabled in CI) envscan emits
+  workflow commands so missing/duplicate/unused vars appear inline on the PR.
+
 ## 0.8.0
 
 - Comment-aware scanning: references inside `//` and `/* */` comments are no

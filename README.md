@@ -32,6 +32,7 @@ envscan -e .env.example -e .env.local  # check against several files at once
 envscan --fix                 # append missing vars to the env file as placeholders
 envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
+envscan --github              # emit GitHub Actions inline annotations
 ```
 
 ### Example
@@ -58,6 +59,14 @@ Scanned 42 files · checked against .env.example
 
 ```yaml
 - run: npx envscan --strict
+```
+
+Inside GitHub Actions it auto-detects the runner and emits inline annotations,
+so missing variables show up right on the pull request diff. Force it anywhere
+with `--github`:
+
+```text
+::error file=src/billing.ts,line=12::Missing environment variable STRIPE_SECRET_KEY
 ```
 
 ## How it works
