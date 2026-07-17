@@ -31,6 +31,29 @@ describe("scanner", () => {
     expect(keys).toEqual(["API_KEY", "DB_URL", "MODE"]);
   });
 
+  it("detects Deno.env.get and Bun.env references", () => {
+    const d = mkdtempSync(join(tmpdir(), "envscan-rt-"));
+    writeFileSync(
+      join(d, "app.ts"),
+      [
+        "const a = Deno.env.get('DENO_KEY');",
+        "const b = Bun.env.BUN_KEY;",
+        "const c = Bun.env['BUN_BRACKET'];",
+      ].join("\n"),
+    );
+    const keys = scanUsages(collectFiles(d)).map((u) => u.key).sort();
+    expect(keys).toEqual(["BUN_BRACKET", "BUN_KEY", "DENO_KEY"]);
+    rmSync(d, { recursive: true, force: true });
+  });
+
+  it("treats a Deno.env.get with a fallback as optional", () => {
+    const d = mkdtempSync(join(tmpdir(), "envscan-rt2-"));
+    writeFileSync(join(d, "app.ts"), "const a = Deno.env.get('LEVEL') ?? 'info';");
+    const [usage] = scanUsages(collectFiles(d));
+    expect(usage).toMatchObject({ key: "LEVEL", optional: true });
+    rmSync(d, { recursive: true, force: true });
+  });
+
   it("ignores references inside comments", () => {
     const d = mkdtempSync(join(tmpdir(), "envscan-cmt-"));
     writeFileSync(
