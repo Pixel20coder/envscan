@@ -11,7 +11,8 @@ reference, and compares it against your `.env.example`. It tells you which
 variables your code needs but you forgot to document, and which ones you
 document but no longer use.
 
-Zero runtime dependencies. Works with JS, TS, JSX, TSX, Vue, and Svelte.
+Zero runtime dependencies. Works with JS, TS, JSX, TSX, Vue, and Svelte, and
+recognizes `process.env`, `import.meta.env`, `Bun.env`, and `Deno.env.get()`.
 Commented-out references are ignored, so old code doesn't cause false reports.
 
 ## Install

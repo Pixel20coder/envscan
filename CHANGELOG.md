@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.10.0
+
+- Broader runtime support: detect `Bun.env.FOO` and `Deno.env.get("FOO")` in
+  addition to `process.env` and `import.meta.env`.
+
 ## 0.9.0
 
 - GitHub Actions annotations: with `--github` (auto-enabled in CI) envscan emits
