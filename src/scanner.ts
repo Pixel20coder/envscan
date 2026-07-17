@@ -10,8 +10,20 @@ const IGNORED_DIRS = new Set([
   "node_modules", ".git", "dist", "build", ".next", "coverage", ".turbo",
 ]);
 
-// Matches process.env.FOO, process.env["FOO"], import.meta.env.FOO
-const ENV_USAGE = /(?:process\.env|import\.meta\.env)(?:\.([A-Za-z_][A-Za-z0-9_]*)|\[\s*['"`]([A-Za-z_][A-Za-z0-9_]*)['"`]\s*\])/g;
+const NAME = "([A-Za-z_][A-Za-z0-9_]*)";
+
+// Property/bracket access: process.env.FOO, process.env["FOO"], import.meta.env.FOO, Bun.env.FOO
+const ACCESS = new RegExp(
+  `(?:process\\.env|import\\.meta\\.env|Bun\\.env)(?:\\.${NAME}|\\[\\s*['"\`]${NAME}['"\`]\\s*\\])`,
+  "g",
+);
+// Deno function form: Deno.env.get("FOO")
+const DENO_GET = new RegExp(`Deno\\.env\\.get\\(\\s*['"\`]${NAME}['"\`]\\s*\\)`, "g");
+
+const PATTERNS: { re: RegExp; key: (m: RegExpExecArray) => string | undefined }[] = [
+  { re: ACCESS, key: (m) => m[1] ?? m[2] },
+  { re: DENO_GET, key: (m) => m[1] },
+];
 
 // A fallback right after the reference (`|| "x"`, `?? "x"`) makes the var optional.
 const FALLBACK = /^\s*(?:\|\||\?\?)/;
@@ -48,13 +60,15 @@ export function scanUsages(files: string[]): EnvUsage[] {
     const content = stripComments(readFileSync(file, "utf8"));
     const lines = content.split(/\r?\n/);
     lines.forEach((text, i) => {
-      let m: RegExpExecArray | null;
-      ENV_USAGE.lastIndex = 0;
-      while ((m = ENV_USAGE.exec(text)) !== null) {
-        const key = m[1] ?? m[2];
-        if (!key) continue;
-        const rest = text.slice(m.index + m[0].length);
-        usages.push({ key, file, line: i + 1, optional: FALLBACK.test(rest) });
+      for (const { re, key: getKey } of PATTERNS) {
+        let m: RegExpExecArray | null;
+        re.lastIndex = 0;
+        while ((m = re.exec(text)) !== null) {
+          const key = getKey(m);
+          if (!key) continue;
+          const rest = text.slice(m.index + m[0].length);
+          usages.push({ key, file, line: i + 1, optional: FALLBACK.test(rest) });
+        }
       }
     });
   }
