@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/envscan.svg)](https://www.npmjs.com/package/envscan)
 [![license](https://img.shields.io/npm/l/envscan.svg)](./LICENSE)
 [![node](https://img.shields.io/node/v/envscan.svg)](https://nodejs.org)
+[![tests](https://img.shields.io/badge/tests-41%20passing-brightgreen)](./tests)
 
 > Catch missing or unused environment variables before they break production.
 
@@ -14,6 +15,19 @@ document but no longer use.
 Zero runtime dependencies. Works with JS, TS, JSX, TSX, Vue, and Svelte, and
 recognizes `process.env`, `import.meta.env`, `Bun.env`, and `Deno.env.get()`.
 Commented-out references are ignored, so old code doesn't cause false reports.
+
+## Features
+
+- **Missing & unused detection** — variables your code reads but you never
+  documented, and documented variables the code no longer uses.
+- **Multiple runtimes** — `process.env`, `import.meta.env`, `Bun.env`, `Deno.env.get()`.
+- **Optional-variable awareness** — references with a `?? fallback` are treated as
+  optional, not required.
+- **Framework presets** — `NEXT_PUBLIC_*`, `VITE_*` and friends are auto-recognized.
+- **Duplicate detection** — flags the same key declared twice in your env file.
+- **Auto-fix** — `--fix` appends missing keys as placeholders.
+- **CI-ready** — JSON output, GitHub Actions annotations, and meaningful exit codes.
+- **Zero dependencies** — a single small binary, nothing to audit.
 
 ## Install
 
@@ -35,6 +49,18 @@ envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
 envscan --github              # emit GitHub Actions inline annotations
 ```
+
+### Flags
+
+| Flag                 | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| `-e`, `--env <file>` | Reference env file to check against (repeatable). Default `.env.example`. |
+| `--fix`              | Append missing variables to the env file as empty placeholders.    |
+| `--strict`           | Also fail when documented variables are unused.                    |
+| `--framework <name>` | Force a framework preset: `next`, `vite`, `cra`, `expo`, `astro`.  |
+| `--json`             | Emit machine-readable JSON instead of the human report.            |
+| `--github`           | Emit GitHub Actions inline annotations.                            |
+| `--help`             | Show usage and exit.                                               |
 
 ### Example
 
@@ -69,6 +95,14 @@ with `--github`:
 ```text
 ::error file=src/billing.ts,line=12::Missing environment variable STRIPE_SECRET_KEY
 ```
+
+### Exit codes
+
+| Code | Meaning                                                             |
+| ---- | ------------------------------------------------------------------- |
+| `0`  | Clean — no missing variables (and none unused under `--strict`).    |
+| `1`  | Findings — missing variables, or unused ones when `--strict`.       |
+| `2`  | Configuration or usage error (e.g. an invalid `envscan.json`).      |
 
 ## How it works
 
