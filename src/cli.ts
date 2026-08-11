@@ -6,6 +6,8 @@ import { buildReport } from "./report.js";
 import { loadConfig, makeMatcher } from "./config.js";
 import { detectFramework, presetPatterns } from "./presets.js";
 import { githubAnnotations } from "./github.js";
+import { parseArgs } from "./args.js";
+import { createRequire } from "node:module";
 
 const c = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -15,44 +17,12 @@ const c = {
   bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
 };
 
-/** Raw command-line flags. `envFile`/`strict` stay undefined unless passed, so
- *  config-file values can fill the gap before defaults are applied. */
-interface CliArgs {
-  dir: string;
-  envFiles: string[];
-  json: boolean;
-  strict?: boolean;
-  fix: boolean;
-  framework?: string;
-  github?: boolean;
-}
-
 interface Options {
   dir: string;
   envFiles: string[];
   json: boolean;
   strict: boolean;
   fix: boolean;
-}
-
-function parseArgs(argv: string[]): CliArgs {
-  const args: CliArgs = { dir: ".", envFiles: [], json: false, fix: false };
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === "--env" || arg === "-e") {
-      const next = argv[++i];
-      if (next) args.envFiles.push(next);
-    } else if (arg === "--framework" || arg === "-f") args.framework = argv[++i] ?? args.framework;
-    else if (arg === "--json") args.json = true;
-    else if (arg === "--github") args.github = true;
-    else if (arg === "--strict") args.strict = true;
-    else if (arg === "--fix") args.fix = true;
-    else if (arg === "--help" || arg === "-h") {
-      printHelp();
-      process.exit(0);
-    } else if (!arg?.startsWith("-")) args.dir = arg ?? args.dir;
-  }
-  return args;
 }
 
 function printHelp(): void {
@@ -68,6 +38,7 @@ ${c.bold("Options:")}
       --strict           also fail when declared vars are unused
       --json             output machine-readable JSON
       --github           emit GitHub Actions annotations (auto in CI)
+  -v, --version          print the envscan version
   -h, --help             show this help
 
 ${c.bold("Config:")}
@@ -79,8 +50,28 @@ ${c.bold("Exit codes:")}
   0  all good   1  missing/duplicate/unused vars   2  bad config`);
 }
 
+/** Read the CLI's own version from the shipped package.json. */
+function getVersion(): string {
+  try {
+    const require = createRequire(import.meta.url);
+    return (require("../package.json") as { version?: string }).version ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
+
+  if (args.help) {
+    printHelp();
+    process.exit(0);
+  }
+  if (args.version) {
+    console.log(getVersion());
+    process.exit(0);
+  }
+
   const root = resolve(args.dir);
 
   // CLI flags take precedence over envscan.json, which takes precedence over defaults.
