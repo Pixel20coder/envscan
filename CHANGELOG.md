@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.11.0
+
+- Add `-v` / `--version` to print the installed version.
+- Refactor argument parsing into its own module with unit tests.
+
 ## 0.10.0
 
 - Broader runtime support: detect `Bun.env.FOO` and `Deno.env.get("FOO")` in

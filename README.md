@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/envscan.svg)](https://www.npmjs.com/package/envscan)
 [![license](https://img.shields.io/npm/l/envscan.svg)](./LICENSE)
 [![node](https://img.shields.io/node/v/envscan.svg)](https://nodejs.org)
-[![tests](https://img.shields.io/badge/tests-41%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-49%20passing-brightgreen)](./tests)
 
 > Catch missing or unused environment variables before they break production.
 
@@ -48,6 +48,7 @@ envscan --fix                 # append missing vars to the env file as placehold
 envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
 envscan --github              # emit GitHub Actions inline annotations
+envscan --version             # print the installed version
 ```
 
 ### Flags
@@ -60,7 +61,8 @@ envscan --github              # emit GitHub Actions inline annotations
 | `--framework <name>` | Force a framework preset: `next`, `vite`, `cra`, `expo`, `astro`.  |
 | `--json`             | Emit machine-readable JSON instead of the human report.            |
 | `--github`           | Emit GitHub Actions inline annotations.                            |
-| `--help`             | Show usage and exit.                                               |
+| `-v`, `--version`    | Print the installed version and exit.                              |
+| `-h`, `--help`       | Show usage and exit.                                               |
 
 ### Example
 
