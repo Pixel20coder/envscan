@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/envscan.svg)](https://www.npmjs.com/package/envscan)
 [![license](https://img.shields.io/npm/l/envscan.svg)](./LICENSE)
 [![node](https://img.shields.io/node/v/envscan.svg)](https://nodejs.org)
-[![tests](https://img.shields.io/badge/tests-49%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-50%20passing-brightgreen)](./tests)
 
 > Catch missing or unused environment variables before they break production.
 
@@ -44,6 +44,7 @@ envscan                       # scan ./ against .env.example
 envscan ./src                 # scan a specific directory
 envscan --env .env.sample     # use a different reference file
 envscan -e .env.example -e .env.local  # check against several files at once
+envscan --ignore 'AWS_*'      # ignore vars by name or * pattern (repeatable)
 envscan --fix                 # append missing vars to the env file as placeholders
 envscan --strict              # also fail on unused (documented but dead) vars
 envscan --json                # machine-readable output for CI
@@ -56,6 +57,7 @@ envscan --version             # print the installed version
 | Flag                 | Description                                                        |
 | -------------------- | ------------------------------------------------------------------ |
 | `-e`, `--env <file>` | Reference env file to check against (repeatable). Default `.env.example`. |
+| `-i`, `--ignore <pattern>` | Ignore a variable by name or `*` pattern (repeatable). Merges with `envscan.json`. |
 | `--fix`              | Append missing variables to the env file as empty placeholders.    |
 | `--strict`           | Also fail when documented variables are unused.                    |
 | `--framework <name>` | Force a framework preset: `next`, `vite`, `cra`, `expo`, `astro`.  |

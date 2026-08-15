@@ -33,6 +33,7 @@ ${c.bold("Usage:")}
 
 ${c.bold("Options:")}
   -e, --env <file>       env file to check against (repeatable; default: .env.example)
+  -i, --ignore <pattern> var name or * pattern to ignore (repeatable)
   -f, --framework <name> preset for injected vars: next, vite, cra, expo, astro
       --fix              append any missing vars to the env file as placeholders
       --strict           also fail when declared vars are unused
@@ -98,7 +99,8 @@ function main(): void {
 
   // Framework: explicit flag > config > auto-detected from package.json.
   const framework = args.framework ?? config.framework ?? detectFramework(root);
-  const ignorePatterns = [...config.ignore, ...presetPatterns(framework)];
+  // Ignore patterns: CLI --ignore flags merge with config and preset patterns.
+  const ignorePatterns = [...args.ignore, ...config.ignore, ...presetPatterns(framework)];
 
   const files = collectFiles(root);
   const usages = scanUsages(files);
