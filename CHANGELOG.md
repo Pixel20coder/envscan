@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.12.0
+
+- Add `-i` / `--ignore <pattern>` to ignore variables from the command line
+  (repeatable); merges with any `ignore` list in `envscan.json`.
+
 ## 0.11.0
 
 - Add `-v` / `--version` to print the installed version.

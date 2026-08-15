@@ -3,7 +3,20 @@ import { parseArgs } from "../src/args.js";
 
 describe("parseArgs", () => {
   it("uses sensible defaults with no arguments", () => {
-    expect(parseArgs([])).toEqual({ dir: ".", envFiles: [], json: false, fix: false });
+    expect(parseArgs([])).toEqual({
+      dir: ".",
+      envFiles: [],
+      json: false,
+      fix: false,
+      ignore: [],
+    });
+  });
+
+  it("collects repeatable --ignore / -i patterns", () => {
+    expect(parseArgs(["--ignore", "AWS_*", "-i", "SENTRY_DSN"]).ignore).toEqual([
+      "AWS_*",
+      "SENTRY_DSN",
+    ]);
   });
 
   it("takes the first non-flag argument as the directory", () => {
